@@ -11,40 +11,33 @@ const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const employees = [];
 
-const initTeamQuestions = [
-    { type: "input", name: "name", message: "What is the manager's name?" },
-    { type: "input", name: "id", message: "What is the manager's ID?" },
-    { type: "input", name: "email", message: "What is the manager's email?" },
-    { type: "input", name: "officeNumber", message: "What is their office number?" },
-    {
-        type: "list",
-        name: "addTeamMember",
-        message: "Would you like to add another team member?",
+const initQuestions = [
+    { type: "list", name: "role", message: "What is the employee's role?",
         choices: [
             {
-                name: "Yes, let's add an engineer",
+                name: "Engineer",
                 value: "engineer"
             },
             {
-                name: "Yes, let's add an intern",
+                name: "Intern",
                 value: "intern"
             },
             {
-                name: "No, there are no additional team members",
-                value: "no"
+                name:"Manager",
+                value: "manager"
             }
         ]
     }
 ];
 
 const newEngineerQuestions = [
-    { type: "input", name: "name", message: "What is the engineer's name?" },
-    { type: "input", name: "id", message: "What is the engineer's ID?" },
-    { type: "input", name: "email", message: "What is the engineer's email?" },
+    { type: "input", name: "name", message: "What is the employee's name?" },
+    { type: "input", name: "id", message: "What is the employee's ID?" },
+    { type: "input", name: "email", message: "What is the employee's email?" },
     {
         type: "input",
         name: "github",
-        message: "What is their GitHub username?"
+        message: "What is the Engineer's GitHub username?"
     },
     {
         type: "list",
@@ -52,15 +45,11 @@ const newEngineerQuestions = [
         message: "Would you like to add another team member?",
         choices: [
             {
-                name: "Add an engineer",
-                value: "engineer"
+                name: "yes",
+                value: "yes"
             },
             {
-                name: "Add an intern",
-                value: "intern"
-            },
-            {
-                name: "No additional team members",
+                name: "no",
                 value: "no"
             }
         ]
@@ -68,9 +57,9 @@ const newEngineerQuestions = [
 ];
 
 const newInternQuestions = [
-    { type: "input", name: "name", message: "What is the intern's name?" },
-    { type: "input", name: "id", message: "What is the intern's ID?" },
-    { type: "input", name: "email", message: "What is the intern's email?" },
+    { type: "input", name: "name", message: "What is the employee's name?" },
+    { type: "input", name: "id", message: "What is the employee's ID?" },
+    { type: "input", name: "email", message: "What is the employee's email?" },
     { type: "input", name: "school", message: "What school do they attend?" },
     {
         type: "list",
@@ -78,15 +67,32 @@ const newInternQuestions = [
         message: "Would you like to add another team member?",
         choices: [
             {
-                name: "Yes, let's add an engineer",
-                value: "engineer"
+                name: "yes",
+                value: "yes"
             },
             {
-                name: "Yes, let's add an intern",
-                value: "intern"
+                name: "no",
+                value: "no"
+            }
+        ]
+    }
+];
+const newManagerQuestions = [
+    { type: "input", name: "name", message: "What is the employee's name?" },
+    { type: "input", name: "id", message: "What is the employee's ID?" },
+    { type: "input", name: "email", message: "What is the employee's email?" },
+    { type: "input", name: "officeNumber", message: "What is their office number?" },
+    {
+        type: "list",
+        name: "addTeamMember",
+        message: "Would you like to add another team member?",
+        choices: [
+            {
+                name: "yes",
+                value: "yes"
             },
             {
-                name: "No, there are no additional team members",
+                name: "no",
                 value: "no"
             }
         ]
@@ -94,16 +100,14 @@ const newInternQuestions = [
 ];
 
 const initTeam = () => {
-    inquirer.prompt(initTeamQuestions).then(function(data) {
-        const manager = new Manager(
-            data.name,
-            data.id,
-            data.email,
-            data.officeNumber
-        );
-
-        employees.push(manager);
-        whatsNext(data);
+    inquirer.prompt(initQuestions).then(function(data) {
+        if (data.role === "engineer") {
+            addNewEngineer();
+        } else if (data.role === "intern") {
+            addNewIntern();
+        } else if (data.role === "manager") {
+            addNewManager();
+        } 
     });
 };
 
@@ -117,7 +121,13 @@ const addNewEngineer = () => {
         );
 
         employees.push(engineer);
-        whatsNext(data);
+        if (data.addTeamMember === "yes"){
+            initTeam();
+        }
+        else{
+            generateHTML();
+        }
+
     });
 };
 
@@ -131,28 +141,41 @@ const addNewIntern = () => {
         );
 
         employees.push(intern);
-        whatsNext(data);
+        if (data.addTeamMember === "yes"){
+            initTeam();
+        }
+        else{
+            generateHTML();
+        }
+
     });
 };
+const addNewManager= () => {
+    inquirer.prompt(newManagerQuestions).then(function(data) {
+        const manager = new Manager(
+            data.name,
+            data.id,
+            data.email,
+            data.officeNumber
+        );
 
-const whatsNext = (data) => {
-    if (data.addTeamMember === "engineer") {
-        addNewEngineer();
-    } else if (data.addTeamMember === "intern") {
-        addNewIntern();
-    } else {
-        console.log("Building your HTML");
-        generateHTML();
-    }
-}
+        employees.push(manager);
+        if (data.addTeamMember === "yes"){
+            initTeam();
+        }
+        else{
+            generateHTML();
+        }
 
+    });
+};
 const generateHTML = () => {
     const htmlString = render(employees)
     fs.writeFile(outputPath, htmlString, function(err) {
         if (err) {
             return console.log(err);
         }
-        console.log("Success!");
+        console.log("Success! HTML created");
     });
 }
 
